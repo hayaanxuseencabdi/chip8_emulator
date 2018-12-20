@@ -1,7 +1,10 @@
 set(
   SOURCE_FILES
 
-  ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp  
+  src/main.cpp
+
+  src/register/register.h
+  src/register/register.cpp
   
   PARENT_SCOPE
 )
