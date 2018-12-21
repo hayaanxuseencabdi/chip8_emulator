@@ -11,7 +11,7 @@
  * The sprites represent the possible values of a hexadecimal digit, i.e.
  * {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F}.
  */
-std::array<std::uint8_t, 16 * 5> SPRITES {
+constexpr std::array<std::uint8_t, 16 * 5> SPRITES {
   0xF0, 0x90, 0x90, 0x90, 0xF0,
   0x20, 0x60, 0x20, 0x20, 0x70,
   0xF0, 0x10, 0xF0, 0x80, 0xF0,

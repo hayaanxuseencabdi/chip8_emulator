@@ -10,9 +10,7 @@ add_subdirectory(src)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-add_compile_options(
-  -Wall -Wextra -Wpedantic -Weffc++ -Wshadow
-)
+add_compile_options(-Wall -Wextra -Wpedantic -Weffc++ -Wshadow)
 
 add_executable(chip8 ${SOURCE_FILES})
 target_link_libraries(chip8 ${SDL2_LIBRARIES})

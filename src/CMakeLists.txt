@@ -1,10 +1,9 @@
 set(
   SOURCE_FILES
 
-  src/main.cpp
-
-  src/register/register.h
-  src/register/register.cpp
+  src/cpu.cpp
+  src/chip8.cpp
+  src/disassembler.cpp
   
   PARENT_SCOPE
 )
