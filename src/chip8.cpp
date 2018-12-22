@@ -35,19 +35,24 @@ constexpr std::array<std::uint8_t, 16 * 5> SPRITES {
 };
 
 CHIP8::CHIP8(const std::string& file_loc) 
-  : opcode {0}, V {std::array<std::uint8_t, 16>{}}, pc {std::uint8_t(0x200)},
+  : opcode {0}, V {std::array<std::uint8_t, 16>{}}, pc {std::uint16_t(0x200)},
     I {0}, mem {std::array<std::uint8_t, 4096>{}}, stack_pointer  {0}, 
     stack {std::array<std::uint16_t, 16>{}}, delay_timer {0}, sound_timer {0} {      
+  // Load the fontset into the reserved memory.
   for (std::size_t idx {0}; idx < 0x50; ++idx) {
     mem[idx] = SPRITES[idx];
   }
+  // Fetch the instructions from the ROM.
   std::vector<std::uint8_t>* rom {Disassembler::disassemble_code(file_loc)};
   if (0x200 + rom->size() > 0xFFF) {
     throw std::invalid_argument(
       "The ROM is too large to be processed by the CHIP-8 interpreter.");
   }
+  // Load the program into memory.
   for (std::size_t op_idx {0}; op_idx < rom->size(); ++op_idx) {
     mem[0x200 + op_idx] = (*rom)[op_idx];
   }
   delete rom;
 }
+
+CHIP8::~CHIP8() = default;
