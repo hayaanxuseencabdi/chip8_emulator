@@ -7,7 +7,7 @@
 
 class Disassembler {
 public:
-  static std::vector<std::uint8_t> disassemble_code(const std::string& file_loc);
+  static std::vector<std::uint8_t>* disassemble_code(const std::string& file_loc);
 };
 
 #endif // DISASSEMBLER_H
