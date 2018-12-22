@@ -9,7 +9,8 @@
  *  0NNN      Execute machine language subroutine at address NNN
  */
 void CPU::op_0NNN(CHIP8& chip8, const std::uint16_t& opcode) {
-  // FIXME: forgo implementation for now
+  const std::uint8_t NNN {opcode & 0x0FFF};
+  chip8.pc = NNN;
 }
 
 /**
@@ -23,8 +24,7 @@ void CPU::op_00E0(CHIP8& chip8, const std::uint16_t& opcode) {
  *   00EE     Return from a subroutine
  */
 void CPU::op_00EE(CHIP8& chip8, const std::uint16_t& opcode) {
-  chip8.pc = chip8.stack[chip8.stack_pointer];
-  --chip8.stack_pointer;
+  chip8.pc = chip8.stack[chip8.stack_pointer--];
 }
 
 /**
@@ -135,7 +135,10 @@ void CPU::op_8XY3(CHIP8& chip8, const std::uint16_t& opcode) {
  *            Set VF to 00 if a carry does not occur
  */
 void CPU::op_8XY4(CHIP8& chip8, const std::uint16_t& opcode) {
-  // FIXME: implement. figure out whether they mean carry/borrow from overflow/underflow
+  const std::uint8_t X {opcode & 0x0F00};
+  const std::uint8_t Y {opcode & 0x00F0};
+  chip8.V[0xF] = (chip8.V[Y] + chip8.V[X] > 0xFF);
+  chip8.V[Y] += chip8.V[X];
 }
 
 /**
@@ -144,7 +147,10 @@ void CPU::op_8XY4(CHIP8& chip8, const std::uint16_t& opcode) {
  *            Set VF to 01 if a borrow does not occur
  */
 void CPU::op_8XY5(CHIP8& chip8, const std::uint16_t& opcode) {
-  // FIXME: implement. figure out whether they mean carry/borrow from overflow/underflow
+  const std::uint8_t X {opcode & 0x0F00};
+  const std::uint8_t Y {opcode & 0x00F0};
+  chip8.V[0xF] = (chip8.V[Y] - chip8.V[X] < 0x00);
+  chip8.V[Y] -= chip8.V[X];
 }
 
 /**
@@ -152,7 +158,10 @@ void CPU::op_8XY5(CHIP8& chip8, const std::uint16_t& opcode) {
  *            Set register VF to the least significant bit prior to the shift
  */
 void CPU::op_8XY6(CHIP8& chip8, const std::uint16_t& opcode) {
-  // FIXME: implement
+  const std::uint8_t X {opcode & 0x0F00};
+  const std::uint8_t Y {opcode & 0x00F0};
+  chip8.V[0xF] = chip8.V[Y] & 0x01;
+  chip8.V[X] = chip8.V[Y] >> 1;
 }
 
 /**
@@ -169,7 +178,10 @@ void CPU::op_8XY7(CHIP8& chip8, const std::uint16_t& opcode) {
  *            Set register VF to the most significant bit prior to the shift
  */
 void CPU::op_8XYE(CHIP8& chip8, const std::uint16_t& opcode) {
-  // FIXME: implement
+  const std::uint8_t X {opcode & 0x0F00};
+  const std::uint8_t Y {opcode & 0x00F0};
+  chip8.V[0xF] = chip8.V[Y] & 0x80;
+  chip8.V[X] = chip8.V[Y] << 1;
 }
 
 /**
@@ -177,7 +189,9 @@ void CPU::op_8XYE(CHIP8& chip8, const std::uint16_t& opcode) {
  *            equal to the value of register VY
  */
 void CPU::op_9XY0(CHIP8& chip8, const std::uint16_t& opcode) {
-  // FIXME: implement
+  const std::uint8_t X {opcode & 0x0F00};
+  const std::uint8_t Y {opcode & 0x00F0};
+  chip8.pc = (chip8.V[X] != chip8.V[Y]) ? chip8.pc + 2 : chip8.pc;
 }
 
 /**
@@ -185,7 +199,6 @@ void CPU::op_9XY0(CHIP8& chip8, const std::uint16_t& opcode) {
  */
 void CPU::op_ANNN(CHIP8& chip8, const std::uint16_t& opcode) {
   const std::uint16_t NNN {opcode & 0x0FFF};
-  // FIXME: double check whether it's just the address or the value @ mem[NNN]
   chip8.I = NNN;
 }
 
@@ -201,7 +214,9 @@ void CPU::op_BNNN(CHIP8& chip8, const std::uint16_t& opcode) {
  *   CXNN     Set VX to a random number with a mask of NN
  */
 void CPU::op_CXNN(CHIP8& chip8, const std::uint16_t& opcode) {
-  // FIXME: seed a RNG
+  const std::uint8_t X {opcode & 0x0F00};
+  const std::uint8_t NN {opcode & 0x0FF};
+  chip8.V[X] = (std::rand() % (1 << 8)) & NN;
 }
 
 /**
@@ -241,7 +256,7 @@ void CPU::op_FX07(CHIP8& chip8, const std::uint16_t& opcode) {
  *   FX0A     Wait for a keypress and store the result in register VX
  */
 void CPU::op_FX0A(CHIP8& chip8, const std::uint16_t& opcode) {
-  // FIXME: implement
+  // FIXME: set up key input
 }
 
 /**
@@ -282,7 +297,13 @@ void CPU::op_FX29(CHIP8& chip8, const std::uint16_t& opcode) {
  *            register VX at addresses I, I+1, and I+2
  */
 void CPU::op_FX33(CHIP8& chip8, const std::uint16_t& opcode) {
-  // FIXME: ???
+  const std::uint8_t X {opcode & 0x0F00};
+  std::uint8_t value {chip8.V[X]};
+  chip8.mem[chip8.I + 2] = value % 10;
+  value /= 10;
+  chip8.mem[chip8.I + 1] = value % 10;
+  value /= 10;
+  chip8.mem[chip8.I] = value % 10;
 }
 
 /**

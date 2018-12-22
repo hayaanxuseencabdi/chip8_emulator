@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <ctime>
+#include <cstdlib>
 
 #include "disassembler.h"
 
@@ -35,7 +37,7 @@ constexpr std::array<std::uint8_t, 16 * 5> SPRITES {
 };
 
 CHIP8::CHIP8(const std::string& file_loc) 
-  : opcode {0}, V {std::array<std::uint8_t, 16>{}}, pc {std::uint16_t(0x200)},
+  : opcode {0}, V {std::array<std::uint8_t, 16>{}}, pc {0x200},
     I {0}, mem {std::array<std::uint8_t, 4096>{}}, stack_pointer  {0}, 
     stack {std::array<std::uint16_t, 16>{}}, delay_timer {0}, sound_timer {0} {      
   // Load the fontset into the reserved memory.
@@ -53,6 +55,8 @@ CHIP8::CHIP8(const std::string& file_loc)
     mem[0x200 + op_idx] = (*rom)[op_idx];
   }
   delete rom;
+  // Seed the random number generator
+  std::srand(std::time(nullptr));
 }
 
 CHIP8::~CHIP8() = default;
