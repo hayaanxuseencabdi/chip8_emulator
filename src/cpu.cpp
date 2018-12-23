@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <stdexcept>
 
 #include "chip8.h"
 
@@ -9,15 +10,19 @@
  *  0NNN      Execute machine language subroutine at address NNN
  */
 void CPU::op_0NNN(CHIP8& chip8, const std::uint16_t& opcode) {
-  const std::uint8_t NNN {opcode & 0x0FFF};
-  chip8.pc = NNN;
+  throw std::runtime_error("This operation was not implemented.");
 }
 
 /**
  *  00E0      Clear the screen
  */
 void CPU::op_00E0(CHIP8& chip8, const std::uint16_t& opcode) {
-  // FIXME: forgo implementation for now
+  // Set each pixel to zero a.k.a. off.
+  for (std::array<std::uint8_t, 64>& row : chip8.display) {
+    for (std::uint8_t& pixel : row) {
+      pixel = 0;
+    }
+  }
 }
 
 /**
@@ -138,7 +143,7 @@ void CPU::op_8XY4(CHIP8& chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t Y {opcode & 0x00F0};
   chip8.V[0xF] = (chip8.V[Y] + chip8.V[X] > 0xFF);
-  chip8.V[Y] += chip8.V[X];
+  chip8.V[X] += chip8.V[Y];
 }
 
 /**
@@ -150,7 +155,7 @@ void CPU::op_8XY5(CHIP8& chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t Y {opcode & 0x00F0};
   chip8.V[0xF] = (chip8.V[Y] - chip8.V[X] < 0x00);
-  chip8.V[Y] -= chip8.V[X];
+  chip8.V[X] -= chip8.V[Y];
 }
 
 /**
@@ -161,7 +166,8 @@ void CPU::op_8XY6(CHIP8& chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t Y {opcode & 0x00F0};
   chip8.V[0xF] = chip8.V[Y] & 0x01;
-  chip8.V[X] = chip8.V[Y] >> 1;
+  chip8.V[Y] >>= 1;
+  chip8.V[X] = chip8.V[Y];
 }
 
 /**
@@ -170,7 +176,10 @@ void CPU::op_8XY6(CHIP8& chip8, const std::uint16_t& opcode) {
  *            Set VF to 01 if a borrow does not occur
  */
 void CPU::op_8XY7(CHIP8& chip8, const std::uint16_t& opcode) {
-  // FIXME: implement
+  const std::uint8_t X {opcode & 0x0F00};
+  const std::uint8_t Y {opcode & 0x00F0};
+  chip8.V[0xF] = (chip8.V[Y] - chip8.V[X] < 0x00);
+  chip8.V[X] = chip8.V[Y] - chip8.V[X];
 }
 
 /**
@@ -181,7 +190,8 @@ void CPU::op_8XYE(CHIP8& chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t Y {opcode & 0x00F0};
   chip8.V[0xF] = chip8.V[Y] & 0x80;
-  chip8.V[X] = chip8.V[Y] << 1;
+  chip8.V[Y] <<= 1;
+  chip8.V[X] = chip8.V[Y];
 }
 
 /**
@@ -215,7 +225,7 @@ void CPU::op_BNNN(CHIP8& chip8, const std::uint16_t& opcode) {
  */
 void CPU::op_CXNN(CHIP8& chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
-  const std::uint8_t NN {opcode & 0x0FF};
+  const std::uint8_t NN {opcode & 0x00FF};
   chip8.V[X] = (std::rand() % (1 << 8)) & NN;
 }
 
@@ -225,7 +235,21 @@ void CPU::op_CXNN(CHIP8& chip8, const std::uint16_t& opcode) {
  *            Set VF to 01 if any set pixels are changed to unset, and 00 otherwise
  */
 void CPU::op_DXYN(CHIP8& chip8, const std::uint16_t& opcode) {
-  // FIXME: look into this more
+  const std::uint8_t X {opcode & 0x0F00};
+  const std::uint8_t Y {opcode & 0x00F0};
+  const std::uint8_t N {opcode & 0x000F};
+  bool collision {false};
+  for (std::uint8_t byte_idx {0}; byte_idx < N; ++byte_idx) {
+    const std::uint8_t curr_byte {chip8.mem[chip8.I + byte_idx]};
+    for (std::uint8_t pixel_idx {0}; pixel_idx < 8; ++pixel_idx) {
+      const std::uint8_t curr_row {(chip8.V[Y] + byte_idx) % 32};
+      const std::uint8_t curr_col {(chip8.V[X] + pixel_idx) % 64};
+      const std::uint8_t curr_bit {curr_byte & (1 << pixel_idx) ? 1 : 0};
+      if (chip8.display[curr_row][curr_col] && curr_bit) { collision = true; }
+      chip8.display[curr_row][curr_col] ^= curr_bit;
+    }
+  }
+  chip8.V[0xF] = static_cast<std::uint8_t>(collision);
 }
 
 /**
@@ -298,12 +322,10 @@ void CPU::op_FX29(CHIP8& chip8, const std::uint16_t& opcode) {
  */
 void CPU::op_FX33(CHIP8& chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
-  std::uint8_t value {chip8.V[X]};
+  const std::uint8_t& value {chip8.V[X]};
+  chip8.mem[chip8.I] = value / 100;
+  chip8.mem[chip8.I + 1] = (value / 10) % 10;
   chip8.mem[chip8.I + 2] = value % 10;
-  value /= 10;
-  chip8.mem[chip8.I + 1] = value % 10;
-  value /= 10;
-  chip8.mem[chip8.I] = value % 10;
 }
 
 /**
@@ -313,7 +335,7 @@ void CPU::op_FX33(CHIP8& chip8, const std::uint16_t& opcode) {
  */
 void CPU::op_FX55(CHIP8& chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
-  for (std::size_t idx {0x000}; idx <= X; ++idx) {
+  for (std::uint8_t idx {0x000}; idx <= X; ++idx) {
     chip8.mem[chip8.I + idx] = chip8.V[idx];
   }
   chip8.I += X + 1;
@@ -326,7 +348,7 @@ void CPU::op_FX55(CHIP8& chip8, const std::uint16_t& opcode) {
  */
 void CPU::op_FX65(CHIP8& chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
-  for (std::size_t idx {0x000}; idx <= X; ++idx) {
+  for (std::uint8_t idx {0x000}; idx <= X; ++idx) {
     chip8.V[idx] = chip8.mem[chip8.I + idx];
   }
   chip8.I += X + 1;

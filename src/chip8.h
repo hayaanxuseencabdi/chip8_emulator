@@ -19,6 +19,7 @@ public:
   std::array<std::uint16_t, 16> stack;
   std::uint8_t delay_timer;
   std::uint8_t sound_timer;
+  std::array<std::array<std::uint8_t, 64>, 32> display; // 64x32 pixel display
 
 public:
   CHIP8(const std::string& file_loc);
