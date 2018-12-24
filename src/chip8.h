@@ -10,7 +10,6 @@
 
 class CHIP8 {
 public:
-  std::uint16_t opcode;
   std::array<std::uint8_t, 16> V; // 16 8-bit data registers
   std::uint16_t pc; // program counter
   std::uint16_t I; // 16-bit index register

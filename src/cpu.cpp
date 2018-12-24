@@ -9,16 +9,16 @@
 /**
  *  0NNN      Execute machine language subroutine at address NNN
  */
-void CPU::op_0NNN(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_0NNN(CHIP8* chip8, const std::uint16_t& opcode) {
   throw std::runtime_error("This operation was not implemented.");
 }
 
 /**
  *  00E0      Clear the screen
  */
-void CPU::op_00E0(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_00E0(CHIP8* chip8, const std::uint16_t& opcode) {
   // Set each pixel to zero a.k.a. off.
-  for (std::array<std::uint8_t, 64>& row : chip8.display) {
+  for (std::array<std::uint8_t, 64>& row : chip8->display) {
     for (std::uint8_t& pixel : row) {
       pixel = 0;
     }
@@ -28,110 +28,110 @@ void CPU::op_00E0(CHIP8& chip8, const std::uint16_t& opcode) {
 /**
  *   00EE     Return from a subroutine
  */
-void CPU::op_00EE(CHIP8& chip8, const std::uint16_t& opcode) {
-  chip8.pc = chip8.stack[chip8.stack_pointer--];
+void CPU::op_00EE(CHIP8* chip8, const std::uint16_t& opcode) {
+  chip8->pc = chip8->stack[chip8->stack_pointer--];
 }
 
 /**
  *   1NNN     Jump to address NNN
  */
-void CPU::op_1NNN(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_1NNN(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint16_t NNN {opcode & 0x0FFF};
-  chip8.pc = NNN;
+  chip8->pc = NNN;
 }
 
 /**
  *   2NNN     Execute subroutine starting at address NNN
  */
-void CPU::op_2NNN(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_2NNN(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint16_t NNN {opcode & 0x0FFF};
-  chip8.stack[chip8.stack_pointer] = chip8.pc;
-  ++chip8.stack_pointer;
-  chip8.pc = NNN;
+  chip8->stack[chip8->stack_pointer] = chip8->pc;
+  ++chip8->stack_pointer;
+  chip8->pc = NNN;
 }
 
 /**
  *   3XNN     Skip the following instruction if the value of register VX
  *            equals NN
  */
-void CPU::op_3XNN(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_3XNN(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t NN {opcode & 0x00FF};
-  chip8.pc = chip8.V[X] == NN ? chip8.pc + 2 : chip8.pc;
+  chip8->pc = chip8->V[X] == NN ? chip8->pc + 2 : chip8->pc;
 }
 
 /**
  *  4XNN      Skip the following instruction if the value of register VX is not
  *            equal to NN
  */
-void CPU::op_4XNN(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_4XNN(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t NN {opcode & 0x00FF};
-  chip8.pc = chip8.V[X] != NN ? chip8.pc + 2 : chip8.pc;
+  chip8->pc = chip8->V[X] != NN ? chip8->pc + 2 : chip8->pc;
 }
 
 /**
  *  5XY0      Skip the following instruction if the value of register VX is equal
  *            to the value of register VY
  */
-void CPU::op_5XY0(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_5XY0(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t Y {opcode & 0x00F0};
-  chip8.pc = (chip8.V[X] == chip8.V[Y]) ? chip8.pc + 2 : chip8.pc;
+  chip8->pc = (chip8->V[X] == chip8->V[Y]) ? chip8->pc + 2 : chip8->pc;
 }
 
 /**
  *   6XNN     Store number NN in register VX
  */
-void CPU::op_6XNN(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_6XNN(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t NN {opcode & 0x00FF};
-  chip8.V[X] = NN;
+  chip8->V[X] = NN;
 }
 
 /**
  *   7XNN     Add the value NN to register VX
  */
-void CPU::op_7XNN(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_7XNN(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t NN {opcode & 0x00FF};
-  chip8.V[X] += NN;
+  chip8->V[X] += NN;
 }
 
 /**
  *   8XY0     Store the value of register VY in register VX
  */
-void CPU::op_8XY0(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_8XY0(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t Y {opcode & 0x00F0};
-  chip8.V[X] = chip8.V[Y];
+  chip8->V[X] = chip8->V[Y];
 }
 
 /**
  *   8XY1     Set VX to VX OR VY
  */
-void CPU::op_8XY1(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_8XY1(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t Y {opcode & 0x00F0};
-  chip8.V[X] |= chip8.V[Y];
+  chip8->V[X] |= chip8->V[Y];
 }
 
 /**
  *   8XY2     Set VX to VX AND VY
  */
-void CPU::op_8XY2(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_8XY2(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t Y {opcode & 0x00F0};
-  chip8.V[X] &= chip8.V[Y];
+  chip8->V[X] &= chip8->V[Y];
 }
 
 /**
  *   8XY3     Set VX to VX XOR VY
  */
-void CPU::op_8XY3(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_8XY3(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t Y {opcode & 0x00F0};
-  chip8.V[X] ^= chip8.V[Y];
+  chip8->V[X] ^= chip8->V[Y];
 }
 
 /**
@@ -139,11 +139,11 @@ void CPU::op_8XY3(CHIP8& chip8, const std::uint16_t& opcode) {
  *            Set VF to 01 if a carry occurs
  *            Set VF to 00 if a carry does not occur
  */
-void CPU::op_8XY4(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_8XY4(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t Y {opcode & 0x00F0};
-  chip8.V[0xF] = (chip8.V[Y] + chip8.V[X] > 0xFF);
-  chip8.V[X] += chip8.V[Y];
+  chip8->V[0xF] = (chip8->V[Y] + chip8->V[X] > 0xFF);
+  chip8->V[X] += chip8->V[Y];
 }
 
 /**
@@ -151,23 +151,23 @@ void CPU::op_8XY4(CHIP8& chip8, const std::uint16_t& opcode) {
  *            Set VF to 00 if a borrow occurs
  *            Set VF to 01 if a borrow does not occur
  */
-void CPU::op_8XY5(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_8XY5(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t Y {opcode & 0x00F0};
-  chip8.V[0xF] = (chip8.V[Y] - chip8.V[X] < 0x00);
-  chip8.V[X] -= chip8.V[Y];
+  chip8->V[0xF] = (chip8->V[Y] - chip8->V[X] < 0x00);
+  chip8->V[X] -= chip8->V[Y];
 }
 
 /**
  *  8XY6      Store the value of register VY shifted right one bit in register VX
  *            Set register VF to the least significant bit prior to the shift
  */
-void CPU::op_8XY6(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_8XY6(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t Y {opcode & 0x00F0};
-  chip8.V[0xF] = chip8.V[Y] & 0x01;
-  chip8.V[Y] >>= 1;
-  chip8.V[X] = chip8.V[Y];
+  chip8->V[0xF] = chip8->V[Y] & 0x01;
+  chip8->V[Y] >>= 1;
+  chip8->V[X] = chip8->V[Y];
 }
 
 /**
@@ -175,58 +175,58 @@ void CPU::op_8XY6(CHIP8& chip8, const std::uint16_t& opcode) {
  *            Set VF to 00 if a borrow occurs
  *            Set VF to 01 if a borrow does not occur
  */
-void CPU::op_8XY7(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_8XY7(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t Y {opcode & 0x00F0};
-  chip8.V[0xF] = (chip8.V[Y] - chip8.V[X] < 0x00);
-  chip8.V[X] = chip8.V[Y] - chip8.V[X];
+  chip8->V[0xF] = (chip8->V[Y] - chip8->V[X] < 0x00);
+  chip8->V[X] = chip8->V[Y] - chip8->V[X];
 }
 
 /**
  *  8XYE      Store the value of register VY shifted left one bit in register VX
  *            Set register VF to the most significant bit prior to the shift
  */
-void CPU::op_8XYE(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_8XYE(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t Y {opcode & 0x00F0};
-  chip8.V[0xF] = chip8.V[Y] & 0x80;
-  chip8.V[Y] <<= 1;
-  chip8.V[X] = chip8.V[Y];
+  chip8->V[0xF] = chip8->V[Y] & 0x80;
+  chip8->V[Y] <<= 1;
+  chip8->V[X] = chip8->V[Y];
 }
 
 /**
  *  9XY0      Skip the following instruction if the value of register VX is not
  *            equal to the value of register VY
  */
-void CPU::op_9XY0(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_9XY0(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t Y {opcode & 0x00F0};
-  chip8.pc = (chip8.V[X] != chip8.V[Y]) ? chip8.pc + 2 : chip8.pc;
+  chip8->pc = (chip8->V[X] != chip8->V[Y]) ? chip8->pc + 2 : chip8->pc;
 }
 
 /**
  *   ANNN     Store memory address NNN in register I
  */
-void CPU::op_ANNN(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_ANNN(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint16_t NNN {opcode & 0x0FFF};
-  chip8.I = NNN;
+  chip8->I = NNN;
 }
 
 /**
  *   BNNN     Jump to address NNN + V0
  */
-void CPU::op_BNNN(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_BNNN(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint16_t NNN {opcode & 0x0FFF};
-  chip8.pc = NNN + chip8.V[0];
+  chip8->pc = NNN + chip8->V[0];
 }
 
 /**
  *   CXNN     Set VX to a random number with a mask of NN
  */
-void CPU::op_CXNN(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_CXNN(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t NN {opcode & 0x00FF};
-  chip8.V[X] = (std::rand() % (1 << 8)) & NN;
+  chip8->V[X] = (std::rand() % (1 << 8)) & NN;
 }
 
 /**
@@ -234,29 +234,27 @@ void CPU::op_CXNN(CHIP8& chip8, const std::uint16_t& opcode) {
  *            starting at the address stored in I
  *            Set VF to 01 if any set pixels are changed to unset, and 00 otherwise
  */
-void CPU::op_DXYN(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_DXYN(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t Y {opcode & 0x00F0};
   const std::uint8_t N {opcode & 0x000F};
-  bool collision {false};
   for (std::uint8_t byte_idx {0}; byte_idx < N; ++byte_idx) {
-    const std::uint8_t curr_byte {chip8.mem[chip8.I + byte_idx]};
+    const std::uint8_t curr_byte {chip8->mem[chip8->I + byte_idx]};
     for (std::uint8_t pixel_idx {0}; pixel_idx < 8; ++pixel_idx) {
-      const std::uint8_t curr_row {(chip8.V[Y] + byte_idx) % 32};
-      const std::uint8_t curr_col {(chip8.V[X] + pixel_idx) % 64};
+      const std::uint8_t curr_row {(chip8->V[Y] + byte_idx) % 32};
+      const std::uint8_t curr_col {(chip8->V[X] + pixel_idx) % 64};
       const std::uint8_t curr_bit {curr_byte & (1 << pixel_idx) ? 1 : 0};
-      if (chip8.display[curr_row][curr_col] && curr_bit) { collision = true; }
-      chip8.display[curr_row][curr_col] ^= curr_bit;
+      if (chip8->display[curr_row][curr_col] && curr_bit) { chip8->V[0xF] = 0x1; }
+      chip8->display[curr_row][curr_col] ^= curr_bit;
     }
   }
-  chip8.V[0xF] = static_cast<std::uint8_t>(collision);
 }
 
 /**
  *  EX9E      Skip the following instruction if the key corresponding to the
  *            hex value currently stored in register VX is pressed
  */
-void CPU::op_EX9E(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_EX9E(CHIP8* chip8, const std::uint16_t& opcode) {
   // FIXME: set up key input
 }
 
@@ -264,68 +262,68 @@ void CPU::op_EX9E(CHIP8& chip8, const std::uint16_t& opcode) {
  *  EXA1      Skip the following instruction if the key corresponding to the
  *            hex value currently stored in register VX is not pressed
  */
-void CPU::op_EXA1(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_EXA1(CHIP8* chip8, const std::uint16_t& opcode) {
   // FIXME: set up key input
 }
 
 /**
  *   FX07     Store the current value of the delay timer in register VX
  */
-void CPU::op_FX07(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_FX07(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
-  chip8.V[X] = chip8.delay_timer;
+  chip8->V[X] = chip8->delay_timer;
 }
 
 /**
  *   FX0A     Wait for a keypress and store the result in register VX
  */
-void CPU::op_FX0A(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_FX0A(CHIP8* chip8, const std::uint16_t& opcode) {
   // FIXME: set up key input
 }
 
 /**
  *   FX15     Set the delay timer to the value of register VX
  */
-void CPU::op_FX15(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_FX15(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
-  chip8.delay_timer = chip8.V[X];
+  chip8->delay_timer = chip8->V[X];
 }
 
 /**
  *   FX18     Set the sound timer to the value of register VX
  */
-void CPU::op_FX18(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_FX18(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
-  chip8.sound_timer = chip8.V[X];
+  chip8->sound_timer = chip8->V[X];
 }
 
 /**
  *   FX1E     Add the value stored in register VX to register I
  */
-void CPU::op_FX1E(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_FX1E(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
-  chip8.I += chip8.V[X];
+  chip8->I += chip8->V[X];
 }
 
 /**
  *  FX29      Set I to the memory address of the sprite data corresponding to
  *            the hexadecimal digit stored in register VX
  */
-void CPU::op_FX29(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_FX29(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
-  chip8.I = 5 * chip8.V[X];
+  chip8->I = 5 * chip8->V[X];
 }
 
 /**
  *  FX33      Store the binary-coded decimal equivalent of the value stored in
  *            register VX at addresses I, I+1, and I+2
  */
-void CPU::op_FX33(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_FX33(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
-  const std::uint8_t& value {chip8.V[X]};
-  chip8.mem[chip8.I] = value / 100;
-  chip8.mem[chip8.I + 1] = (value / 10) % 10;
-  chip8.mem[chip8.I + 2] = value % 10;
+  const std::uint8_t& value {chip8->V[X]};
+  chip8->mem[chip8->I] = value / 100;
+  chip8->mem[chip8->I + 1] = (value / 10) % 10;
+  chip8->mem[chip8->I + 2] = value % 10;
 }
 
 /**
@@ -333,12 +331,12 @@ void CPU::op_FX33(CHIP8& chip8, const std::uint16_t& opcode) {
  *            I is set to I + X + 1 after operation
  *            at address I
  */
-void CPU::op_FX55(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_FX55(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   for (std::uint8_t idx {0x000}; idx <= X; ++idx) {
-    chip8.mem[chip8.I + idx] = chip8.V[idx];
+    chip8->mem[chip8->I + idx] = chip8->V[idx];
   }
-  chip8.I += X + 1;
+  chip8->I += X + 1;
 }
 
 /**
@@ -346,10 +344,10 @@ void CPU::op_FX55(CHIP8& chip8, const std::uint16_t& opcode) {
  *            starting at address I
  *            I is set to I + X + 1 after operation
  */
-void CPU::op_FX65(CHIP8& chip8, const std::uint16_t& opcode) {
+void CPU::op_FX65(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   for (std::uint8_t idx {0x000}; idx <= X; ++idx) {
-    chip8.V[idx] = chip8.mem[chip8.I + idx];
+    chip8->V[idx] = chip8->mem[chip8->I + idx];
   }
-  chip8.I += X + 1;
+  chip8->I += X + 1;
 }

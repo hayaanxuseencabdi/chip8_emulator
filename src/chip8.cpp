@@ -7,8 +7,10 @@
 #include <stdexcept>
 #include <ctime>
 #include <cstdlib>
+#include <iostream>
 
 #include "disassembler.h"
+#include "cpu.h"
 
 /*
  * Contains the sprites (in ascending order) CHIP-8 programs could refer to.
@@ -37,8 +39,8 @@ constexpr std::array<std::uint8_t, 16 * 5> SPRITES {
 };
 
 CHIP8::CHIP8(const std::string& file_loc) 
-  : opcode {0}, V {std::array<std::uint8_t, 16>{}}, pc {0x200},
-    I {0}, mem {std::array<std::uint8_t, 4096>{}}, stack_pointer  {0}, 
+  : V {std::array<std::uint8_t, 16>{}}, pc {0x200}, I {0},
+    mem {std::array<std::uint8_t, 4096>{}}, stack_pointer  {0},
     stack {std::array<std::uint16_t, 16>{}}, delay_timer {0}, sound_timer {0},
     display(std::array<std::array<std::uint8_t, 64>, 32>{}) {
   // Load the fontset into the reserved memory.
@@ -56,8 +58,16 @@ CHIP8::CHIP8(const std::string& file_loc)
     mem[0x200 + op_idx] = (*rom)[op_idx];
   }
   delete rom;
-  // Seed the random number generator
+  // Seed the random number generator.
   std::srand(std::time(nullptr));
 }
 
 CHIP8::~CHIP8() = default;
+
+void CHIP8::clock_cycle() {
+  const std::uint16_t& opcode {V[pc]};
+  pc += 2;
+  // large switch case to call the correct CPU function
+  // std::cerr any opcodes that dont match the 35 implemented ones
+  // std::cerr << "Unknown operation: " << opcode << '\n';
+}
