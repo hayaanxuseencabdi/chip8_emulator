@@ -243,7 +243,7 @@ void CPU::op_DXYN(CHIP8* chip8, const std::uint16_t& opcode) {
     for (std::uint8_t pixel_idx {0}; pixel_idx < 8; ++pixel_idx) {
       const std::uint8_t curr_row {(chip8->V[Y] + byte_idx) % 32};
       const std::uint8_t curr_col {(chip8->V[X] + pixel_idx) % 64};
-      const std::uint8_t curr_bit {curr_byte & (1 << pixel_idx) ? 1 : 0};
+      const std::uint8_t curr_bit {curr_byte & (1 << 7 - pixel_idx) ? 1 : 0};
       if (chip8->display[curr_row][curr_col] && curr_bit) { chip8->V[0xF] = 0x1; }
       chip8->display[curr_row][curr_col] ^= curr_bit;
     }
