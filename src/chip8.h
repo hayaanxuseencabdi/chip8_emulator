@@ -4,9 +4,8 @@
 #include <cstdint>
 #include <cstddef>
 #include <array>
+#include <vector>
 #include <string>
-
-#include "disassembler.h"
 
 class CHIP8 {
 public:
@@ -16,13 +15,15 @@ public:
   std::array<std::uint8_t, 4096> mem; // 4096 bytes of addressable memory
   std::uint8_t stack_pointer; // 8-bit stack pointer
   std::array<std::uint16_t, 16> stack;
+  std::array<std::array<std::uint8_t, 64>, 32> display; // 64x32 pixel display
   std::uint8_t delay_timer;
   std::uint8_t sound_timer;
-  std::array<std::array<std::uint8_t, 64>, 32> display; // 64x32 pixel display
+  bool redraw;
 
 public:
   CHIP8(const std::string& file_loc);
   ~CHIP8();
+  static std::vector<std::uint8_t>* read_program(const std::string& file_loc);
   void clock_cycle();
 };
 
