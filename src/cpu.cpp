@@ -1,34 +1,30 @@
 #include "cpu.h"
 
-#include <cstddef>
 #include <cstdint>
 #include <stdexcept>
 
+#include <SDL2/SDL.h>
 #include "chip8.h"
 
 /**
  *  0NNN      Execute machine language subroutine at address NNN
  */
 void CPU::op_0NNN(CHIP8* chip8, const std::uint16_t& opcode) {
-  throw std::runtime_error("This operation was not implemented.");
+  throw std::runtime_error("The operation [0NNN] was not implemented.");
 }
 
 /**
  *  00E0      Clear the screen
  */
-void CPU::op_00E0(CHIP8* chip8, const std::uint16_t& opcode) {
-  // Set each pixel to zero a.k.a. off.
-  for (std::array<std::uint8_t, 64>& row : chip8->display) {
-    for (std::uint8_t& pixel : row) {
-      pixel = 0;
-    }
-  }
+void CPU::op_00E0(CHIP8* chip8) {
+  chip8->display = std::array<std::array<std::uint8_t, 64>, 32>{};
+  chip8->redraw = true;
 }
 
 /**
  *   00EE     Return from a subroutine
  */
-void CPU::op_00EE(CHIP8* chip8, const std::uint16_t& opcode) {
+void CPU::op_00EE(CHIP8* chip8) {
   chip8->pc = chip8->stack[chip8->stack_pointer--];
 }
 
@@ -154,7 +150,7 @@ void CPU::op_8XY4(CHIP8* chip8, const std::uint16_t& opcode) {
 void CPU::op_8XY5(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t Y {opcode & 0x00F0};
-  chip8->V[0xF] = (chip8->V[Y] - chip8->V[X] < 0x00);
+  chip8->V[0xF] = (chip8->V[Y] - chip8->V[X] > -1);
   chip8->V[X] -= chip8->V[Y];
 }
 
@@ -178,7 +174,7 @@ void CPU::op_8XY6(CHIP8* chip8, const std::uint16_t& opcode) {
 void CPU::op_8XY7(CHIP8* chip8, const std::uint16_t& opcode) {
   const std::uint8_t X {opcode & 0x0F00};
   const std::uint8_t Y {opcode & 0x00F0};
-  chip8->V[0xF] = (chip8->V[Y] - chip8->V[X] < 0x00);
+  chip8->V[0xF] = (chip8->V[Y] - chip8->V[X] > -1);
   chip8->V[X] = chip8->V[Y] - chip8->V[X];
 }
 
@@ -244,26 +240,53 @@ void CPU::op_DXYN(CHIP8* chip8, const std::uint16_t& opcode) {
       const std::uint8_t curr_row {(chip8->V[Y] + byte_idx) % 32};
       const std::uint8_t curr_col {(chip8->V[X] + pixel_idx) % 64};
       const std::uint8_t curr_bit {curr_byte & (1 << 7 - pixel_idx) ? 1 : 0};
-      if (chip8->display[curr_row][curr_col] && curr_bit) { chip8->V[0xF] = 0x1; }
+      if (chip8->display[curr_row][curr_col] && curr_bit) {
+        chip8->V[0xF] = 0x1;
+      }
       chip8->display[curr_row][curr_col] ^= curr_bit;
     }
   }
+  chip8->redraw = true;
 }
 
 /**
  *  EX9E      Skip the following instruction if the key corresponding to the
  *            hex value currently stored in register VX is pressed
  */
-void CPU::op_EX9E(CHIP8* chip8, const std::uint16_t& opcode) {
-  // FIXME: set up key input
+void CPU::op_EX9E(CHIP8* chip8, const std::uint16_t& opcode, SDL_Event event) {
+  const std::uint8_t X {opcode & 0x0F00};
+  while (true) {
+    while (SDL_PollEvent(&event)) {
+      const std::int32_t key_pressed {event.key.keysym.sym};
+      if (event.type == SDL_KEYDOWN
+          && chip8->KEYPAD.find(key_pressed) != chip8->KEYPAD.end()) {
+        chip8->pc = chip8->KEYPAD[key_pressed] == chip8->V[X]
+                    ? chip8->pc + 2
+                    : chip8->pc;
+        return;
+      }
+    }
+  }
 }
 
 /**
  *  EXA1      Skip the following instruction if the key corresponding to the
  *            hex value currently stored in register VX is not pressed
  */
-void CPU::op_EXA1(CHIP8* chip8, const std::uint16_t& opcode) {
-  // FIXME: set up key input
+void CPU::op_EXA1(CHIP8* chip8, const std::uint16_t& opcode, SDL_Event event) {
+  const std::uint8_t X {opcode & 0x0F00};
+  while (true) {
+    while (SDL_PollEvent(&event)) {
+      const std::int32_t key_pressed {event.key.keysym.sym};
+      if (event.type == SDL_KEYDOWN
+          && chip8->KEYPAD.find(key_pressed) != chip8->KEYPAD.end()) {
+        chip8->pc = chip8->KEYPAD[key_pressed] != chip8->V[X]
+                    ? chip8->pc + 2
+                    : chip8->pc;
+        return;
+      }
+    }
+  }
 }
 
 /**
@@ -277,8 +300,17 @@ void CPU::op_FX07(CHIP8* chip8, const std::uint16_t& opcode) {
 /**
  *   FX0A     Wait for a keypress and store the result in register VX
  */
-void CPU::op_FX0A(CHIP8* chip8, const std::uint16_t& opcode) {
-  // FIXME: set up key input
+void CPU::op_FX0A(CHIP8* chip8, const std::uint16_t& opcode, SDL_Event event) {
+  const std::uint8_t X {opcode & 0x0F00};
+  while (true) {
+    while (SDL_PollEvent(&event)) {
+      const std::int32_t key_pressed {event.key.keysym.sym};
+      if (event.type == SDL_KEYDOWN) {
+        chip8->V[X] = key_pressed;
+        return;
+      }
+    }
+  }
 }
 
 /**

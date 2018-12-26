@@ -8,8 +8,11 @@
 #include <ctime>
 #include <cstdlib>
 #include <iostream>
+#include <unordered_map>
 #include <fstream>
+#include <ios>
 
+#include <SDL2/SDL.h>
 #include "cpu.h"
 
 /*
@@ -38,6 +41,13 @@ constexpr std::array<std::uint8_t, 16 * 5> SPRITES {
   0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 };
 
+std::unordered_map<std::int32_t, std::uint8_t> CHIP8::KEYPAD {
+  {SDLK_1, 0x0}, {SDLK_2, 0x1}, {SDLK_3, 0x2}, {SDLK_4, 0x3},
+  {SDLK_q, 0x4}, {SDLK_w, 0x5}, {SDLK_e, 0x6}, {SDLK_r, 0x7},
+  {SDLK_a, 0x8}, {SDLK_s, 0x9}, {SDLK_d, 0xA}, {SDLK_f, 0xB},
+  {SDLK_z, 0xC}, {SDLK_x, 0xD}, {SDLK_c, 0xE}, {SDLK_v, 0xF}
+};
+
 std::vector<std::uint8_t>* CHIP8::read_program(const std::string& file_loc) {
   std::ifstream rom {file_loc, std::ios::binary};
   if (!rom) {
@@ -48,10 +58,11 @@ std::vector<std::uint8_t>* CHIP8::read_program(const std::string& file_loc) {
 
 CHIP8::CHIP8(const std::string& file_loc) 
   : V {std::array<std::uint8_t, 16>{}}, pc {0x200}, I {0},
-    mem {std::array<std::uint8_t, 4096>{}}, stack_pointer  {0},
+    mem {std::array<std::uint8_t, 4096>{}}, stack_pointer {0},
     stack {std::array<std::uint16_t, 16>{}},
     display {std::array<std::array<std::uint8_t, 64>, 32>{}},
-    delay_timer {0}, sound_timer {0}, redraw {false} {
+    // FIXME: set timers to 60 or 0 at start?
+    delay_timer {60}, sound_timer {60}, redraw {false} {
   // Load the fontset into the reserved memory.
   for (std::size_t idx {0}; idx < 0x50; ++idx) {
     mem[idx] = SPRITES[idx];
@@ -76,15 +87,19 @@ CHIP8::~CHIP8() = default;
 void CHIP8::clock_cycle() {
   const std::uint16_t& opcode {(V[pc] << 8) | V[pc + 1]};
   pc += 2;
-  
   switch (opcode & 0xF000) {
-    // case 0x0000:
-    //   /* code */
-    //   break;
-    // case 0x1000:
-    //   break;
+    // TODO: implement switch statement for the current operation
     default:
-      std::cerr << "Unknown operation: " << opcode << '\n';
+      std::cerr << "Unknown operation: " << std::hex << std::uppercase
+                << opcode << '\n';
       break;
   }
+}
+
+bool CHIP8::needs_redrawing() {
+  if (redraw) {
+    redraw = false;
+    return true;
+  }
+  return false;
 }

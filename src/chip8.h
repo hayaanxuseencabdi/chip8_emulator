@@ -6,6 +6,7 @@
 #include <array>
 #include <vector>
 #include <string>
+#include <unordered_map>
 
 class CHIP8 {
 public:
@@ -19,12 +20,14 @@ public:
   std::uint8_t delay_timer;
   std::uint8_t sound_timer;
   bool redraw;
+  static std::unordered_map<std::int32_t, std::uint8_t> KEYPAD;
 
 public:
   CHIP8(const std::string& file_loc);
   ~CHIP8();
   static std::vector<std::uint8_t>* read_program(const std::string& file_loc);
   void clock_cycle();
+  bool needs_redrawing();
 };
 
 #endif // CHIP8_H
