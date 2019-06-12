@@ -14,11 +14,12 @@ void update_screen(CHIP8* chip8, SDL_Renderer* renderer) {
   SDL_RenderClear(renderer);
   SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
   for (int row_idx {0}; row_idx < 32; row_idx += 2) {
-    for (int col_idx {0}; col_idx < 32; col_idx += 2) {
+    for (int col_idx {0}; col_idx < 64; col_idx += 2) {
       if (chip8->display[row_idx][col_idx]) {
         for (std::uint8_t p_row {0}; p_row < 25; ++p_row) {
           for (std::uint8_t p_col {0}; p_col < 25; ++p_col) {
-            SDL_RenderDrawPoint(renderer, col_idx * 25 + p_col,
+            SDL_RenderDrawPoint(renderer,
+                                col_idx * 25 + p_col,
                                 row_idx * 25 + p_row);
           } 
         }
